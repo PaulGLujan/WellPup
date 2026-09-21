@@ -37,3 +37,11 @@ next-env.d.ts
 
 # Vitest reports and artifacts
 .vitest/
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
