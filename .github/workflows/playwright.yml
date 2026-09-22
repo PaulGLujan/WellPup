@@ -1,11 +1,11 @@
-name: Playwright Tests
+name: CI
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 jobs:
-  test:
+  ci:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -15,10 +15,14 @@ jobs:
         node-version: lts/*
     - name: Install dependencies
       run: npm install -g pnpm && pnpm install
+    - name: Run lint 
+      run: pnpm run lint
+    - name: Run unit tests
+      run: pnpm run test
     - name: Install Playwright Browsers
       run: pnpm exec playwright install --with-deps
     - name: Run Playwright tests
-      run: pnpm exec playwright test
+      run: pnpm run test:e2e 
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
