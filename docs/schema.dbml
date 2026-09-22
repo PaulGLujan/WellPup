@@ -1,0 +1,49 @@
+Table User {
+  id integer [primary key]
+  email varchar
+  name varchar
+}
+
+Table PetProfile {
+  id integer [primary key]
+  user_id integer [not null]
+  name varchar
+  dob date
+  sex enum
+  weight decimal
+  microchip varchar
+}
+
+Table VaccinationRule {
+  id integer [primary key]
+  vaccineName varchar
+  ageTrigger interval
+  recurrence interval
+}
+
+Table VaccinationRecord {
+  id integer [primary key]
+  vaccination_rule_id integer [not null]
+  appointment_id integer
+  pet_profile_id integer [not null]
+  completed_date date
+}
+
+Table Appointment {
+  id integer [primary key]
+  pet_profile_id integer [not null]
+  date date
+  clinic varchar
+  vet_name varchar
+  notes varchar
+}
+
+Ref: PetProfile.user_id > User.id
+
+Ref: VaccinationRecord.vaccination_rule_id > VaccinationRule.id
+
+Ref: Appointment.id ?< VaccinationRecord.appointment_id
+
+Ref: PetProfile.id < VaccinationRecord.pet_profile_id
+
+Ref: Appointment.pet_profile_id > PetProfile.id
