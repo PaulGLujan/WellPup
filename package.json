@@ -19,6 +19,7 @@
     "db:seed": "tsx --env-file=.env scripts/seed.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
     "@base-ui/react": "^1.8.0",
     "@neondatabase/serverless": "^1.1.0",
     "class-variance-authority": "^0.7.1",
