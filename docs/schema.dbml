@@ -21,6 +21,12 @@ Table VaccinationRule {
   recurrence interval
 }
 
+Table VaccineAlias {
+  id integer [primary key]
+  raw_name varchar [not null]
+  vaccination_rule_id integer [not null]
+}
+
 Table VaccinationRecord {
   id integer [primary key]
   vaccination_rule_id integer [not null]
@@ -38,12 +44,26 @@ Table Appointment {
   notes varchar
 }
 
+Table ExtractionJob {
+  id integer [primary key]
+  pet_profile_id integer [not null]
+  s3_key varchar
+  status enum [not null] // pending, processed, failed
+  retry_count integer [default: 0]
+  raw_response text
+  created_at timestamp
+}
+
 Ref: PetProfile.user_id > User.id
 
 Ref: VaccinationRecord.vaccination_rule_id > VaccinationRule.id
 
-Ref: Appointment.id ?< VaccinationRecord.appointment_id
+Ref: VaccinationRecord.appointment_id > Appointment.id
 
 Ref: PetProfile.id < VaccinationRecord.pet_profile_id
 
 Ref: Appointment.pet_profile_id > PetProfile.id
+
+Ref: VaccineAlias.vaccination_rule_id > VaccinationRule.id
+
+Ref: ExtractionJob.pet_profile_id > PetProfile.id
