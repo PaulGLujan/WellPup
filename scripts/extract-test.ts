@@ -4,7 +4,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const filePath = process.argv[2];
 if (!filePath) {
-  console.error("Usage: npx tsx scripts/extract-test.ts <path-to-pdf-or-image>");
+  console.error("Usage: pnpm extract:test <path-to-file>");
   process.exit(1);
 }
 
