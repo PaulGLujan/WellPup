@@ -1,69 +1,106 @@
-Table User {
-  id integer [primary key]
-  email varchar
-  name varchar
+// Mirrors lib/db/schema.ts (the source of truth). Keep the two in sync.
+
+Enum sex {
+  male
+  female
 }
 
-Table PetProfile {
-  id integer [primary key]
+Enum extraction_status {
+  pending
+  processed
+  failed
+}
+
+Table users {
+  id integer [pk, increment]
+  email varchar(255) [not null, unique]
+  name varchar(255)
+}
+
+Table pet_profiles {
+  id integer [pk, increment]
   user_id integer [not null]
-  name varchar
-  dob date
-  sex enum
-  weight decimal
-  microchip varchar
+  name varchar(255) [not null]
+  dob date [not null]
+  sex sex
+  weight numeric
+  microchip varchar(255)
+
+  indexes {
+    user_id [name: 'pet_profiles_user_id_idx']
+  }
 }
 
-Table VaccinationRule {
-  id integer [primary key]
-  vaccineName varchar
-  ageTrigger interval
+Table vaccination_rules {
+  id integer [pk, increment]
+  vaccine_name varchar(255) [not null, unique]
+  age_trigger interval
   recurrence interval
 }
 
-Table VaccineAlias {
-  id integer [primary key]
-  raw_name varchar [not null]
+Table vaccine_aliases {
+  id integer [pk, increment]
+  raw_name varchar(255) [not null, unique, note: 'Stored lowercase and trimmed']
   vaccination_rule_id integer [not null]
+
+  indexes {
+    vaccination_rule_id [name: 'vaccine_aliases_vaccination_rule_id_idx']
+  }
 }
 
-Table VaccinationRecord {
-  id integer [primary key]
+// Due date and status are computed at query time, not stored.
+// Multiple records per pet per rule are allowed.
+Table vaccination_records {
+  id integer [pk, increment]
   vaccination_rule_id integer [not null]
   appointment_id integer
   pet_profile_id integer [not null]
   completed_date date
+
+  indexes {
+    pet_profile_id [name: 'vaccination_records_pet_profile_id_idx']
+    vaccination_rule_id [name: 'vaccination_records_vaccination_rule_id_idx']
+    appointment_id [name: 'vaccination_records_appointment_id_idx']
+  }
 }
 
-Table Appointment {
-  id integer [primary key]
+Table appointments {
+  id integer [pk, increment]
   pet_profile_id integer [not null]
-  date date
-  clinic varchar
-  vet_name varchar
+  date date [not null]
+  clinic varchar(255)
+  vet_name varchar(255)
   notes varchar
+
+  indexes {
+    pet_profile_id [name: 'appointments_pet_profile_id_idx']
+  }
 }
 
-Table ExtractionJob {
-  id integer [primary key]
+Table extraction_jobs {
+  id integer [pk, increment]
   pet_profile_id integer [not null]
-  s3_key varchar
-  status enum [not null] // pending, processed, failed
-  retry_count integer [default: 0]
+  s3_key varchar(1024) [not null]
+  status extraction_status [not null, default: 'pending']
+  retry_count integer [not null, default: 0]
   raw_response text
-  created_at timestamp
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    pet_profile_id [name: 'extraction_jobs_pet_profile_id_idx']
+  }
 }
 
-Ref: PetProfile.user_id > User.id
+Ref: pet_profiles.user_id > users.id
 
-Ref: VaccinationRecord.vaccination_rule_id > VaccinationRule.id
+Ref: vaccination_records.vaccination_rule_id > vaccination_rules.id
 
-Ref: VaccinationRecord.appointment_id > Appointment.id
+Ref: vaccination_records.appointment_id > appointments.id
 
-Ref: PetProfile.id < VaccinationRecord.pet_profile_id
+Ref: vaccination_records.pet_profile_id > pet_profiles.id
 
-Ref: Appointment.pet_profile_id > PetProfile.id
+Ref: appointments.pet_profile_id > pet_profiles.id
 
-Ref: VaccineAlias.vaccination_rule_id > VaccinationRule.id
+Ref: vaccine_aliases.vaccination_rule_id > vaccination_rules.id
 
-Ref: ExtractionJob.pet_profile_id > PetProfile.id
+Ref: extraction_jobs.pet_profile_id > pet_profiles.id
