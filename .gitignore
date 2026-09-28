@@ -31,6 +31,9 @@ pnpm-debug.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# local test fixtures (may contain real PII, keep local-only)
+/test-data
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
