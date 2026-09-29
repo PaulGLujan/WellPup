@@ -4,13 +4,33 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic();
 
-// Sends a vet record (PDF or image) to Claude and returns the raw text of the
-// response. The response is not parsed or validated here.
+// File types Claude accepts: PDFs as documents, the rest as images.
+export type MediaType =
+  | "application/pdf"
+  | "image/png"
+  | "image/jpeg"
+  | "image/gif"
+  | "image/webp";
+
+// Sends a vet record (PDF or image) from disk to Claude and returns the raw
+// text of the response. Anything that isn't a .pdf is sent as a PNG.
 export async function extractVaccines(filePath: string): Promise<string> {
-  const fileData = fs.readFileSync(filePath).toString("base64");
+  const data = fs.readFileSync(filePath);
   const mediaType = path.extname(filePath).toLowerCase() === ".pdf"
     ? "application/pdf"
     : "image/png";
+
+  return extractVaccinesFromBuffer(data, mediaType);
+}
+
+// Sends a vet record already in memory (for example, an object read from S3)
+// to Claude and returns the raw text of the response. The response is not
+// parsed or validated here.
+export async function extractVaccinesFromBuffer(
+  data: Buffer,
+  mediaType: MediaType
+): Promise<string> {
+  const fileData = data.toString("base64");
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
