@@ -26,13 +26,17 @@ export async function extractVaccines(filePath: string): Promise<string> {
             type: "text",
             text: `Extract every vaccine from this record as JSON: vaccine name and date given.
 
-Only include actual vaccines, matched against this list of core and non-core canine vaccines (a record may use a brand name - map it to the vaccine it protects against):
+Only include actual vaccines. Use this list of core and non-core canine vaccines to recognize them; a record may name one by brand, product code, or as a combination (for example DHPP-BORD):
 Core: Rabies, Distemper (DHPP/DAPP), Adenovirus/Canine Hepatitis (DHPP/DAPP), Parvovirus (DHPP/DAPP)
 Non-core: Bordetella (Kennel Cough), Leptospirosis, Parainfluenza, Canine Influenza (H3N8/H3N2), Lyme Disease (Borrelia burgdorferi)
 
-Do not include dewormers, parasiticides, or other non-vaccine medications. Ignore SKU, invoice, and line-item numbers - do not include them in the vaccine name. If a combination vaccine (e.g. DHPP) covers multiple items on this list, return it as one entry using its combination name rather than splitting it out.
+Only report an item if it is one of the vaccines listed above. Exclude everything else, including dewormers, flea and tick treatments, pain medications, anesthetics, microchips, and procedures.
 
-Return only JSON, nothing else.`,
+For "vaccine_name", copy the vaccine's name exactly as written in the record, including brand names, codes, and combination names. Do not expand, translate, split, or clean it up.
+
+If the same vaccine dose appears more than once in the record, return it once. If one mention is a brand name (for example "IMRAB3" on a vaccination certificate) and another is an internal inventory or billing code for the same dose (for example "DRABIES12695"), use the brand name, as written.
+
+Return only a JSON array, nothing else. Each item must be an object with exactly two keys: "vaccine_name" and "date_given". "date_given" must be in YYYY-MM-DD format. If there are no vaccines, return [].`,
           },
         ],
       },
