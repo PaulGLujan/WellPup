@@ -102,6 +102,45 @@ Lambda's CloudWatch log group for:
 
 Thrown errors appear as Lambda runtime errors with a stack trace.
 
+## Infrastructure
+
+The CDK app in `infra/` (`app.ts`, `extraction-stack.ts`) defines one stack,
+`WellPupExtraction`:
+
+- **Uploads bucket:** private, HTTPS-only, S3-managed encryption. Kept if the
+  stack is deleted, since it holds vet records.
+- **Extract Lambda:** Node.js 24 on ARM, 512 MB, 2-minute timeout (the default
+  3 seconds is shorter than one Claude call). The handler is bundled with
+  esbuild; the AWS SDK comes from the Lambda runtime.
+- **Trigger:** every object created in the bucket invokes the Lambda.
+- **IAM:** the Lambda can `s3:GetObject` in this bucket and
+  `secretsmanager:GetSecretValue` on `well-pup/anthropic-api-key`, plus write
+  its own logs. CDK also adds a small helper Lambda that configures the bucket
+  notification during deploy.
+- **Logs:** kept for one month.
+
+Run CDK from the repo root with `pnpm cdk <command>` (for example
+`pnpm cdk diff`). It uses your AWS CLI credentials and region.
+
+### First deploy
+
+1. Store the Anthropic key in Secrets Manager as a plain string, not JSON.
+   `read -s` keeps the key out of your shell history:
+
+   ```sh
+   read -s ANTHROPIC_KEY
+   aws secretsmanager create-secret \
+     --name well-pup/anthropic-api-key \
+     --secret-string "$ANTHROPIC_KEY" \
+     --region us-west-2
+   unset ANTHROPIC_KEY
+   ```
+
+2. Bootstrap CDK in the account and region (once): `pnpm cdk bootstrap`.
+3. Deploy: `pnpm cdk deploy`.
+4. Upload a record to the bucket and look for `Extraction succeeded` in the
+   Lambda's log group.
+
 ## Testing
 
 `pnpm test --run infra/lambda` runs the handler's unit tests. They fake S3,

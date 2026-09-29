@@ -1,0 +1,4 @@
+{
+  "app": "tsx app.ts",
+  "output": "cdk.out"
+}

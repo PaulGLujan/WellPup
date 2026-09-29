@@ -18,6 +18,9 @@
 # production
 /build
 
+# AWS CDK synth output
+/infra/cdk.out/
+
 # misc
 .DS_Store
 *.pem
