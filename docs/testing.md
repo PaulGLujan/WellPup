@@ -24,6 +24,18 @@ They answer different questions:
   `test-data/` is gitignored because the records contain real PII. Run it
   locally when the prompt, the model, or the expected results change.
 
+## Test data
+
+The eval runs on real vet records: PDFs of exams, vaccination certificates,
+medical histories, and receipts. They contain personal information (owner
+names, addresses, phone numbers), so they are never committed. They live in
+`test-data/`, which is gitignored, and Paul keeps the copies.
+
+To run the eval, ask Paul for the files and put them in `test-data/` at the
+repo root. The file names must match the `file` entries in
+`test/extraction.eval.test.ts`. Don't commit them, and don't share them
+anywhere else (issues, PRs, chat).
+
 ## Where a new test goes
 
 - Logic that doesn't call the model: `something.test.ts`.
@@ -31,6 +43,18 @@ They answer different questions:
 
 Playwright end-to-end tests (`pnpm test:e2e`, in `tests/*.spec.ts`) are
 separate, and neither Vitest path picks them up.
+
+## Adding an eval sample
+
+1. Put the PDF in `test-data/`. The folder is gitignored, so the file stays on
+   your machine. Send Paul a copy so the full set stays in one place.
+2. Add an entry to `samples` in `test/extraction.eval.test.ts` with the file
+   name and the exact vaccines expected, names as written in the record.
+3. Add a comment saying what the sample tests (a record with no vaccines, a
+   hallucination check, a duplicate dose, and so on), so a later failure is
+   easy to understand.
+4. Run `pnpm test:eval` a few times. The model can answer differently from run
+   to run, so one pass doesn't prove the sample is stable.
 
 ## Running locally
 
