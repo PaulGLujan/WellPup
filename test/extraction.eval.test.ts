@@ -65,21 +65,25 @@ const samples = [
   },
 ]
 
-// The model wraps its JSON in a ```json code fence.
-function stripCodeFence(text: string): string {
-  return text
-    .trim()
-    .replace(/^```(?:json)?\s*/, "")
-    .replace(/\s*```$/, "")
+// Pulls the JSON out of the model's reply. The model sometimes explains its
+// reasoning before the JSON, so use the ```json code fence wherever it
+// appears, or failing that, everything from the first "[" to the last "]".
+function extractJson(text: string): string {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
+  if (fenced) return fenced[1]
+
+  const start = text.indexOf("[")
+  const end = text.lastIndexOf("]")
+  return start !== -1 && end > start ? text.slice(start, end + 1) : text
 }
 
 type Vaccine = { vaccine_name: string; date_given: string }
 
-// Parses the model's reply. If it isn't valid JSON, the error includes the
-// full reply so it's clear what the model added.
+// Parses the model's reply. If no valid JSON can be found, the error includes
+// the full reply so it's clear what the model returned.
 function parseResponse(raw: string): Vaccine[] {
   try {
-    return JSON.parse(stripCodeFence(raw))
+    return JSON.parse(extractJson(raw))
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error)
     throw new Error(
