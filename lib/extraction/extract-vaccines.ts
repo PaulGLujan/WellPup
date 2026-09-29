@@ -2,7 +2,10 @@ import fs from "fs";
 import path from "path";
 import Anthropic from "@anthropic-ai/sdk";
 
-const client = new Anthropic();
+// Created on first use rather than at import, because the client reads
+// ANTHROPIC_API_KEY when it's constructed. The Lambda loads the key from
+// Secrets Manager after this module is imported.
+let client: Anthropic | undefined;
 
 // File types Claude accepts: PDFs as documents, the rest as images.
 export type MediaType =
@@ -32,6 +35,7 @@ export async function extractVaccinesFromBuffer(
 ): Promise<string> {
   const fileData = data.toString("base64");
 
+  client ??= new Anthropic();
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 4096,
