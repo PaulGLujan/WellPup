@@ -2,6 +2,7 @@ import path from "path"
 import { expect, it } from "vitest"
 
 import { extractVaccines } from "../lib/extraction/extract-vaccines"
+import { parseResponse } from "../lib/extraction/parse-response"
 
 // Each sample is a PDF in test-data/ and the exact JSON extraction should
 // return for it. Add a sample by adding an entry here.
@@ -65,32 +66,7 @@ const samples = [
   },
 ]
 
-// Pulls the JSON out of the model's reply. The model sometimes explains its
-// reasoning before the JSON, so use the ```json code fence wherever it
-// appears, or failing that, everything from the first "[" to the last "]".
-function extractJson(text: string): string {
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
-  if (fenced) return fenced[1]
-
-  const start = text.indexOf("[")
-  const end = text.lastIndexOf("]")
-  return start !== -1 && end > start ? text.slice(start, end + 1) : text
-}
-
 type Vaccine = { vaccine_name: string; date_given: string }
-
-// Parses the model's reply. If no valid JSON can be found, the error includes
-// the full reply so it's clear what the model returned.
-function parseResponse(raw: string): Vaccine[] {
-  try {
-    return JSON.parse(extractJson(raw))
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error)
-    throw new Error(
-      `Response is not valid JSON (${reason}). Full reply:\n${raw}`
-    )
-  }
-}
 
 function sortVaccines(vaccines: Vaccine[]): Vaccine[] {
   return [...vaccines].sort(
@@ -106,7 +82,9 @@ it.each(samples)(
   async ({ file, expected }) => {
     const raw = await extractVaccines(path.join("test-data", file))
 
-    const actual = parseResponse(raw)
+    // Compared as raw JSON, not through vaccineListSchema, so a failure diffs
+    // exactly what the model returned.
+    const actual = parseResponse(raw) as Vaccine[]
 
     // Order doesn't matter, so compare both lists sorted. A failure still
     // shows the full diff.

@@ -1,0 +1,20 @@
+{
+  // Type-checks the CDK app and the Lambda handler (and the lib/ files it
+  // imports). Nothing is emitted: tsx runs the CDK app, and esbuild bundles
+  // the handler.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["cdk.out"]
+}
